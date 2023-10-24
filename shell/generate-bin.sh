@@ -77,8 +77,7 @@ git config --local user.email "snxamdf@126.com"
 git config --local user.name "sxmxta"
 
 git config --local --add safe.directory ./
-
 git add .
-git commit -m 'Upgrade to $version'
+git commit -m "Upgrade-version:${version}"
 git push git@github.com:sxmxta/liblclbinres.git main
 #git tag -a $version -m "Upgrade to $version"
