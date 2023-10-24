@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [ "maina" ]
+  pull_request:
+    branches: [ "maina" ]
+#  push:
+#    tags:
+#      - 'v*.*.*'
+
+jobs:
+  # 所有构建任务完成后运行的任务
+  lastrun:
+    # needs: [windows-64, windows-32, linux-amd64, macos-amd64, linux-aarch64]
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      matrix:
+        operating-system: [ ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Go Environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
+      - name: SSH Private RSA
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.RSA_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ls -l ~/.ssh/id_rsa
+
+      - name: Set Release version env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Compress and generate binaries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp ./shell/generate-download.sh $RUNNER_WORKSPACE
+          cp ./shell/generate-bin.sh $RUNNER_WORKSPACE
+          cd $RUNNER_WORKSPACE
+          chmod +x ./generate-download.sh
+          chmod +x ./generate-bin.sh
+          ./generate-bin.sh $RELEASE_VERSION $GITHUB_TOKEN
